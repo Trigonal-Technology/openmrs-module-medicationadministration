@@ -44,7 +44,7 @@
 		<mockitoVersion>3.5.11</mockitoVersion>
 		<argLine>-Xmx1024m</argLine>
 		<jacocoVersion>0.7.9</jacocoVersion>
-		<lombokVersion>1.18.26</lombokVersion>
+		<lombokVersion>1.18.36</lombokVersion>
 		<openmrsFhir2Version>2.5.0</openmrsFhir2Version>
 	</properties>
 
@@ -108,6 +108,14 @@
 					<configuration>
 						<target>1.8</target>
 						<source>1.8</source>
+						<!-- Wire Lombok as annotation processor for JDK 21 compatibility -->
+						<annotationProcessorPaths>
+							<path>
+								<groupId>org.projectlombok</groupId>
+								<artifactId>lombok</artifactId>
+								<version>${lombokVersion}</version>
+							</path>
+						</annotationProcessorPaths>
 					</configuration>
 				</plugin>
 				<plugin>

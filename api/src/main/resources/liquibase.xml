@@ -5,6 +5,18 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
 
+
+    <changeSet id="enable-pgcrypto-medadmin" author="Bahmni">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM pg_extension WHERE extname = 'pgcrypto';
+            </sqlCheck>
+        </preConditions>
+        <sql dbms="postgresql">
+            CREATE EXTENSION IF NOT EXISTS pgcrypto;
+        </sql>
+    </changeSet>
+
     <changeSet id="2023-12-05-1854_medication_administration" author="Bahmni">
         <preConditions onFail="MARK_RAN" onFailMessage="Table medication_administration already exists">
             <not>
@@ -27,7 +39,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="status_reason" type="int" />
-            <column name="administered_date_time" type="datetime" />
+            <column name="administered_date_time" type="TIMESTAMP" />
             <column name="dosing_instructions" type="text" />
             <column name="dose" type="double" />
             <column name="dose_units" type="int" />
@@ -38,16 +50,16 @@
             <column name="creator" type="int">
                 <constraints nullable="false" />
             </column>
-            <column name="date_created" type="datetime">
+            <column name="date_created" type="TIMESTAMP">
                 <constraints nullable="false" />
             </column>
             <column name="changed_by" type="int" />
-            <column name="date_changed" type="datetime" />
+            <column name="date_changed" type="TIMESTAMP" />
             <column name="voided" type="boolean" defaultValueBoolean="false">
                 <constraints nullable="false" />
             </column>
             <column name="voided_by" type="int" />
-            <column name="date_voided" type="datetime" />
+            <column name="date_voided" type="TIMESTAMP" />
             <column name="void_reason" type="varchar(255)" />
         </createTable>
         <addForeignKeyConstraint constraintName="medication_administration_patient_fk" baseTableName="medication_administration" baseColumnNames="patient_id" referencedTableName="patient" referencedColumnNames="patient_id"/>
@@ -64,7 +76,7 @@
         <addForeignKeyConstraint constraintName="medication_administration_voided_by_fk" baseTableName="medication_administration" baseColumnNames="voided_by" referencedTableName="users" referencedColumnNames="user_id"/>
     </changeSet>
 
-    <changeSet id="2023-12-05-1854_medication_administration_performer__BAH-3928" author="Bahmni" objectQuotingStrategy="QUOTE_ALL_OBJECTS">
+    <changeSet id="2023-12-05-1854_medication_administration_performer__BAH-3928" author="Bahmni" >
         <preConditions onFail="MARK_RAN" onError="WARN">
             <not>
                 <tableExists tableName="medication_administration_performer"/>
@@ -87,16 +99,16 @@
             <column name="creator" type="int">
                 <constraints nullable="false" />
             </column>
-            <column name="date_created" type="datetime">
+            <column name="date_created" type="TIMESTAMP">
                 <constraints nullable="false" />
             </column>
             <column name="changed_by" type="int" />
-            <column name="date_changed" type="datetime" />
+            <column name="date_changed" type="TIMESTAMP" />
             <column name="voided" type="boolean" defaultValueBoolean="false">
                 <constraints nullable="false" />
             </column>
             <column name="voided_by" type="int" />
-            <column name="date_voided" type="datetime" />
+            <column name="date_voided" type="TIMESTAMP" />
             <column name="void_reason" type="varchar(255)" />
         </createTable>
         <addForeignKeyConstraint constraintName="medication_administration_performer_fk" baseTableName="medication_administration_performer" baseColumnNames="medication_administration_id" referencedTableName="medication_administration" referencedColumnNames="medication_administration_id"/>
@@ -107,7 +119,7 @@
         <addForeignKeyConstraint constraintName="medication_administration_performer_voided_by_fk" baseTableName="medication_administration_performer" baseColumnNames="voided_by" referencedTableName="users" referencedColumnNames="user_id"/>
     </changeSet>
 
-    <changeSet id="2024-06-06-1650_fix_column_name_BAH-3928" author="Bahmni" objectQuotingStrategy="QUOTE_ALL_OBJECTS">
+    <changeSet id="2024-06-06-1650_fix_column_name_BAH-3928" author="Bahmni" >
         <preConditions onFail="MARK_RAN" onError="WARN">
                 <columnExists tableName="medication_administration_performer" columnName="function"/>
         </preConditions>
@@ -131,7 +143,7 @@
             </column>
             <column name="medication_administration_id" type="int"/>
             <column name="author_id" type="int"/>
-            <column name="recorded_time" type="datetime"/>
+            <column name="recorded_time" type="TIMESTAMP"/>
             <column name="text" type="text"/>
             <column name="uuid" type="varchar(38)">
                 <constraints nullable="false" unique="true"/>
@@ -139,16 +151,16 @@
             <column name="creator" type="int">
                 <constraints nullable="false" />
             </column>
-            <column name="date_created" type="datetime">
+            <column name="date_created" type="TIMESTAMP">
                 <constraints nullable="false" />
             </column>
             <column name="changed_by" type="int" />
-            <column name="date_changed" type="datetime" />
+            <column name="date_changed" type="TIMESTAMP" />
             <column name="voided" type="boolean" defaultValueBoolean="false">
                 <constraints nullable="false" />
             </column>
             <column name="voided_by" type="int" />
-            <column name="date_voided" type="datetime" />
+            <column name="date_voided" type="TIMESTAMP" />
             <column name="void_reason" type="varchar(255)" />
         </createTable>
         <addForeignKeyConstraint constraintName="medication_administration_note_medication_administration_fk" baseTableName="medication_administration_note" baseColumnNames="medication_administration_id" referencedTableName="medication_administration" referencedColumnNames="medication_administration_id"/>
@@ -182,26 +194,302 @@
             </sqlCheck>
         </preConditions>
         <comment>Add concept source for medication administration status</comment>
-        <sql>
+                <sql dbms="mysql, mariadb">
             insert into concept_reference_source (name, description, hl7_code, creator, date_created, retired, uuid)
-            values("HL7-MedicationAdministrationStatus", "Source used to tag concepts used for medication administration status", "MAS", 1, now(), 0, uuid());
+            values('HL7-MedicationAdministrationStatus', 'Source used to tag concepts used for medication administration status', 'MAS', 1, CURRENT_TIMESTAMP, 0, uuid());
+        </sql>
+        <sql dbms="postgresql">
+            insert into concept_reference_source (name, description, hl7_code, creator, date_created, retired, uuid)
+            values('HL7-MedicationAdministrationStatus', 'Source used to tag concepts used for medication administration status', 'MAS', 1, CURRENT_TIMESTAMP, 0, gen_random_uuid()::varchar);
         </sql>
     </changeSet>
 
     <changeSet id="202312121625_add_concept_related_procedures" author="Bahmni">
         <comment>Creates procedures for adding concepts and its reference source mappings</comment>
-        <sql>
+        
+        <sql dbms="mysql, mariadb">
             DROP PROCEDURE IF EXISTS add_concept;
             DROP PROCEDURE IF EXISTS add_concept_reference_map;
         </sql>
-        <sqlFile splitStatements="false" path="AddConceptProcedure.sql"/>
-        <sqlFile splitStatements="false" path="AddConceptReferenceMapProcedure.sql"/>
+        <sqlFile dbms="mysql, mariadb" splitStatements="false" path="AddConceptProcedure.sql"/>
+        <sqlFile dbms="mysql, mariadb" splitStatements="false" path="AddConceptReferenceMapProcedure.sql"/>
+
     </changeSet>
 
     <changeSet id="202312121625_add_MA_related_concepts" author="Bahmni">
         <comment>Creates MA status and performer function concepts and relevant reference source mappings</comment>
-        <sqlFile splitStatements="true" path="MedicationAdministrationStatusConcepts.sql"/>
-        <sqlFile splitStatements="true" path="MedicationAdministrationPerformerFunctionConcepts.sql"/>
+        
+        <sqlFile dbms="mysql, mariadb" splitStatements="true" path="MedicationAdministrationStatusConcepts.sql"/>
+        <sqlFile dbms="mysql, mariadb" splitStatements="true" path="MedicationAdministrationPerformerFunctionConcepts.sql"/>
+
+        <sql dbms="postgresql" splitStatements="true">
+DO $$
+DECLARE
+    v_concept_source_id INT;
+    v_concept_map_type_id INT;
+    v_parent_concept_id INT;
+    v_concept_id INT;
+    v_reference_term_id INT;
+BEGIN
+    SELECT concept_source_id INTO v_concept_source_id FROM concept_reference_source WHERE name = 'HL7-MedicationAdministrationStatus';
+    SELECT concept_map_type_id INTO v_concept_map_type_id FROM concept_map_type WHERE name = 'SAME-AS';
+
+    -- Medication Administration Status (Parent)
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'Coded'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Medication Administration Status', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Medication Administration Status', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Medication Administration Status', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+    
+    v_parent_concept_id := v_concept_id;
+
+    -- MA-In Progress
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'In Progress', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'MA-In Progress', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'In Progress Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_reference_term (concept_source_id, name, code, creator, date_created, uuid)
+    VALUES (v_concept_source_id, 'In Progress', 'in-progress', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar)
+    RETURNING concept_reference_term_id INTO v_reference_term_id;
+
+    INSERT INTO concept_reference_map (concept_reference_term_id, concept_map_type_id, creator, date_created, concept_id, uuid)
+    VALUES (v_reference_term_id, v_concept_map_type_id, 1, CURRENT_TIMESTAMP, v_concept_id, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 1);
+
+    -- MA-Not Done
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Not Done', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'MA-Not Done', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Not Done Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_reference_term (concept_source_id, name, code, creator, date_created, uuid)
+    VALUES (v_concept_source_id, 'Not Done', 'not-done', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar)
+    RETURNING concept_reference_term_id INTO v_reference_term_id;
+
+    INSERT INTO concept_reference_map (concept_reference_term_id, concept_map_type_id, creator, date_created, concept_id, uuid)
+    VALUES (v_reference_term_id, v_concept_map_type_id, 1, CURRENT_TIMESTAMP, v_concept_id, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 2);
+
+    -- MA-On Hold
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'On Hold', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'MA-On Hold', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'On Hold Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_reference_term (concept_source_id, name, code, creator, date_created, uuid)
+    VALUES (v_concept_source_id, 'On Hold', 'on-hold', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar)
+    RETURNING concept_reference_term_id INTO v_reference_term_id;
+
+    INSERT INTO concept_reference_map (concept_reference_term_id, concept_map_type_id, creator, date_created, concept_id, uuid)
+    VALUES (v_reference_term_id, v_concept_map_type_id, 1, CURRENT_TIMESTAMP, v_concept_id, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 3);
+
+    -- MA-Completed
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Completed', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'MA-Completed', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Completed Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_reference_term (concept_source_id, name, code, creator, date_created, uuid)
+    VALUES (v_concept_source_id, 'Completed', 'completed', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar)
+    RETURNING concept_reference_term_id INTO v_reference_term_id;
+
+    INSERT INTO concept_reference_map (concept_reference_term_id, concept_map_type_id, creator, date_created, concept_id, uuid)
+    VALUES (v_reference_term_id, v_concept_map_type_id, 1, CURRENT_TIMESTAMP, v_concept_id, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 4);
+
+    -- MA-Entered in Error
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Entered in Error', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'MA-Entered in Error', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Entered in Error Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_reference_term (concept_source_id, name, code, creator, date_created, uuid)
+    VALUES (v_concept_source_id, 'Entered in Error', 'entered-in-error', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar)
+    RETURNING concept_reference_term_id INTO v_reference_term_id;
+
+    INSERT INTO concept_reference_map (concept_reference_term_id, concept_map_type_id, creator, date_created, concept_id, uuid)
+    VALUES (v_reference_term_id, v_concept_map_type_id, 1, CURRENT_TIMESTAMP, v_concept_id, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 5);
+
+    -- MA-Stopped
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Stopped', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'MA-Stopped', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Stopped Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_reference_term (concept_source_id, name, code, creator, date_created, uuid)
+    VALUES (v_concept_source_id, 'Stopped', 'stopped', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar)
+    RETURNING concept_reference_term_id INTO v_reference_term_id;
+
+    INSERT INTO concept_reference_map (concept_reference_term_id, concept_map_type_id, creator, date_created, concept_id, uuid)
+    VALUES (v_reference_term_id, v_concept_map_type_id, 1, CURRENT_TIMESTAMP, v_concept_id, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 6);
+
+    -- MA-Unknown
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Unknown', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'MA-Unknown', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Unknown Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_reference_term (concept_source_id, name, code, creator, date_created, uuid)
+    VALUES (v_concept_source_id, 'Unknown', 'unknown', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar)
+    RETURNING concept_reference_term_id INTO v_reference_term_id;
+
+    INSERT INTO concept_reference_map (concept_reference_term_id, concept_map_type_id, creator, date_created, concept_id, uuid)
+    VALUES (v_reference_term_id, v_concept_map_type_id, 1, CURRENT_TIMESTAMP, v_concept_id, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 7);
+
+    INSERT INTO fhir_concept_source (concept_source_id, url, name, creator, date_created, uuid)
+    VALUES (v_concept_source_id, 'http://hl7.org/fhir/CodeSystem/medication-admin-status', 'HL7-MedicationAdministrationStatus', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    -- Medication Administration Performer Function
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'Coded'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Medication Administration Performer Function', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Medication Administration Performer Function', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Medication Administration Performer Function', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    v_parent_concept_id := v_concept_id;
+
+    -- Performer
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Performer', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Performer', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Performer role of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 1);
+
+    -- Verifier
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Verifier', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Verifier', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Verifier role of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 2);
+
+    -- Witness
+    INSERT INTO concept (datatype_id, class_id, is_set, creator, date_created, changed_by, date_changed, uuid)
+    SELECT (SELECT concept_datatype_id FROM concept_datatype WHERE name = 'N/A'), (SELECT concept_class_id FROM concept_class WHERE name = 'Misc'), false, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar
+    RETURNING concept_id INTO v_concept_id;
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Witness', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
+    VALUES (v_concept_id, 'Witness', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+
+    INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
+    VALUES (v_concept_id, 'Witness role of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
+
+    INSERT INTO concept_answer (concept_id, answer_concept, date_created, creator, uuid, sort_weight)
+    VALUES (v_parent_concept_id, v_concept_id, CURRENT_TIMESTAMP, 1, gen_random_uuid()::varchar, 3);
+END $$;
+        </sql>
+
     </changeSet>
 
     <changeSet id="130820240756BAH4061" author="Bahmni">

@@ -10,9 +10,10 @@
 	<author>Bahmni</author>
 	<description>${project.parent.description}</description>
 
+	<require_version>2.7.0</require_version>
+
 	<require_modules>
 		<require_module>org.openmrs.module.webservices.rest</require_module>
-		<require_module>org.bahmni.module.bahmnicore</require_module>
 		<require_module>org.openmrs.module.fhir2</require_module>
 	</require_modules>
 
