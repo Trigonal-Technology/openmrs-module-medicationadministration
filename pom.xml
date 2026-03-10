@@ -45,7 +45,7 @@
 		<argLine>-Xmx1024m</argLine>
 		<jacocoVersion>0.7.9</jacocoVersion>
 		<lombokVersion>1.18.36</lombokVersion>
-		<openmrsFhir2Version>2.5.0</openmrsFhir2Version>
+		<openmrsFhir2Version>3.0.0-SNAPSHOT</openmrsFhir2Version>
 	</properties>
 
 	<build>

@@ -190,7 +190,7 @@
     <changeSet id="202312121625_MA_status_concept_source" author="Bahmni">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
-                select count(*) from concept_reference_source where name = "HL7-MedicationAdministrationStatus";
+                select count(*) from concept_reference_source where name = 'HL7-MedicationAdministrationStatus';
             </sqlCheck>
         </preConditions>
         <comment>Add concept source for medication administration status</comment>
@@ -200,7 +200,7 @@
         </sql>
         <sql dbms="postgresql">
             insert into concept_reference_source (name, description, hl7_code, creator, date_created, retired, uuid)
-            values('HL7-MedicationAdministrationStatus', 'Source used to tag concepts used for medication administration status', 'MAS', 1, CURRENT_TIMESTAMP, 0, gen_random_uuid()::varchar);
+            values('HL7-MedicationAdministrationStatus', 'Source used to tag concepts used for medication administration status', 'MAS', 1, CURRENT_TIMESTAMP, false, gen_random_uuid()::varchar);
         </sql>
     </changeSet>
 
@@ -217,12 +217,17 @@
     </changeSet>
 
     <changeSet id="202312121625_add_MA_related_concepts" author="Bahmni">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM concept_name WHERE name = 'Medication Administration Status' AND concept_name_type = 'FULLY_SPECIFIED';
+            </sqlCheck>
+        </preConditions>
         <comment>Creates MA status and performer function concepts and relevant reference source mappings</comment>
         
         <sqlFile dbms="mysql, mariadb" splitStatements="true" path="MedicationAdministrationStatusConcepts.sql"/>
         <sqlFile dbms="mysql, mariadb" splitStatements="true" path="MedicationAdministrationPerformerFunctionConcepts.sql"/>
 
-        <sql dbms="postgresql" splitStatements="true">
+        <sql dbms="postgresql" splitStatements="false">
 DO $$
 DECLARE
     v_concept_source_id INT;
@@ -231,6 +236,9 @@ DECLARE
     v_concept_id INT;
     v_reference_term_id INT;
 BEGIN
+    -- Sync the concept_id sequence to avoid duplicate key errors on PostgreSQL
+    PERFORM setval('concept_concept_id_seq', (SELECT MAX(concept_id) FROM concept));
+
     SELECT concept_source_id INTO v_concept_source_id FROM concept_reference_source WHERE name = 'HL7-MedicationAdministrationStatus';
     SELECT concept_map_type_id INTO v_concept_map_type_id FROM concept_map_type WHERE name = 'SAME-AS';
 
@@ -240,10 +248,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Medication Administration Status', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Medication Administration Status', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Medication Administration Status', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Medication Administration Status', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Medication Administration Status', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -256,10 +264,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'In Progress', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'In Progress', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'MA-In Progress', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'MA-In Progress', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'In Progress Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -280,10 +288,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Not Done', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Not Done', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'MA-Not Done', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'MA-Not Done', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Not Done Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -304,10 +312,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'On Hold', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'On Hold', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'MA-On Hold', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'MA-On Hold', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'On Hold Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -328,10 +336,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Completed', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Completed', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'MA-Completed', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'MA-Completed', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Completed Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -352,10 +360,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Entered in Error', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Entered in Error', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'MA-Entered in Error', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'MA-Entered in Error', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Entered in Error Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -376,10 +384,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Stopped', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Stopped', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'MA-Stopped', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'MA-Stopped', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Stopped Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -400,10 +408,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Unknown', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Unknown', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'MA-Unknown', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'MA-Unknown', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Unknown Status of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -427,10 +435,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Medication Administration Performer Function', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Medication Administration Performer Function', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Medication Administration Performer Function', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Medication Administration Performer Function', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Medication Administration Performer Function', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -443,10 +451,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Performer', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Performer', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Performer', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Performer', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Performer role of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -460,10 +468,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Verifier', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Verifier', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Verifier', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Verifier', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Verifier role of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -477,10 +485,10 @@ BEGIN
     RETURNING concept_id INTO v_concept_id;
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Witness', 'en', 0, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Witness', 'en', false, 1, CURRENT_TIMESTAMP, 'SHORT', gen_random_uuid()::varchar);
 
     INSERT INTO concept_name (concept_id, name, locale, locale_preferred, creator, date_created, concept_name_type, uuid)
-    VALUES (v_concept_id, 'Witness', 'en', 1, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
+    VALUES (v_concept_id, 'Witness', 'en', true, 1, CURRENT_TIMESTAMP, 'FULLY_SPECIFIED', gen_random_uuid()::varchar);
 
     INSERT INTO concept_description (concept_id, description, locale, creator, date_created, uuid)
     VALUES (v_concept_id, 'Witness role of Medication Administration', 'en', 1, CURRENT_TIMESTAMP, gen_random_uuid()::varchar);
@@ -504,12 +512,12 @@ END $$;
         <update tableName="medication_administration">
             <column name="status"
                     valueComputed="(CASE
-                        WHEN (select concept_reference_term_map_view.code from concept_reference_term_map_view where concept_reference_term_map_view.concept_id = medication_administration.status) = 'in-progress' THEN 'INPROGRESS'
-                        WHEN (select concept_reference_term_map_view.code from concept_reference_term_map_view where concept_reference_term_map_view.concept_id = medication_administration.status) = 'not-done' THEN 'NOTDONE'
-                        WHEN (select concept_reference_term_map_view.code from concept_reference_term_map_view where concept_reference_term_map_view.concept_id = medication_administration.status) = 'on-hold' THEN 'ONHOLD'
-                        WHEN (select concept_reference_term_map_view.code from concept_reference_term_map_view where concept_reference_term_map_view.concept_id = medication_administration.status) = 'completed' THEN 'COMPLETED'
-                        WHEN (select concept_reference_term_map_view.code from concept_reference_term_map_view where concept_reference_term_map_view.concept_id = medication_administration.status) = 'entered-in-error' THEN 'ENTEREDINERROR'
-                        WHEN (select concept_reference_term_map_view.code from concept_reference_term_map_view where concept_reference_term_map_view.concept_id = medication_administration.status) = 'stopped' THEN 'STOPPED'
+                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'in-progress' THEN 'INPROGRESS'
+                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'not-done' THEN 'NOTDONE'
+                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'on-hold' THEN 'ONHOLD'
+                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'completed' THEN 'COMPLETED'
+                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'entered-in-error' THEN 'ENTEREDINERROR'
+                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'stopped' THEN 'STOPPED'
                         ELSE 'UNKNOWN'
                     END)">
             </column>

@@ -3,7 +3,7 @@
 <module configVersion="1.2">
 
 	<!-- Base Module Properties -->
-	<id>${project.parent.artifactId}</id>
+	<id>org.bahmni.module.medication-administration</id>
 	<name>${project.parent.name}</name>
 	<version>${project.parent.version}</version>
 	<package>${MODULE_PACKAGE}</package>
@@ -17,6 +17,6 @@
 		<require_module>org.openmrs.module.fhir2</require_module>
 	</require_modules>
 
-	<activator>org.openmrs.module.fhir2.apiext.MedicationAdministrationActivator</activator>
+	<activator>org.openmrs.module.ipd.api.MedicationAdministrationActivator</activator>
 </module>
 

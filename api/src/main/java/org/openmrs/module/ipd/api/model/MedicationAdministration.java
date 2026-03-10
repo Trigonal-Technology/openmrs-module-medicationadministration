@@ -17,12 +17,14 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * The MedicationAdministration class records detailed information about the provision of a supply of a medication 
- * with the intention that it is subsequently consumed by a patient (usually in response to a prescription).
+ * The MedicationAdministration class records detailed information about the
+ * provision of a supply of a medication
+ * with the intention that it is subsequently consumed by a patient (usually in
+ * response to a prescription).
  *
  * @see <a href="https://www.hl7.org/fhir/medicationadministration.html">
- *     		https://www.hl7.org/fhir/medicationadministration.html
- *     	</a>
+ *      https://www.hl7.org/fhir/medicationadministration.html
+ *      </a>
  * @since 2.5.12
  */
 @Entity
@@ -62,9 +64,12 @@ public class MedicationAdministration extends BaseFormRecordableOpenmrsData {
 
 	/**
 	 * FHIR:performer
-	 * @see <a href="https://www.hl7.org/fhir/medicationadministration-definitions.html#MedicationAdministration.performer">
-	 *     	https://www.hl7.org/fhir/medicationadministration-definitions.html#MedicationAdministration.performer
-	 *     </a>specification, It should be assumed that the actor can be the performer, verifier or witness of the medication administration.
+	 * 
+	 * @see <a href=
+	 *      "https://www.hl7.org/fhir/medicationadministration-definitions.html#MedicationAdministration.performer">
+	 *      https://www.hl7.org/fhir/medicationadministration-definitions.html#MedicationAdministration.performer
+	 *      </a>specification, It should be assumed that the actor can be the
+	 *      performer, verifier or witness of the medication administration.
 	 */
 	@OneToMany(cascade = CascadeType.ALL)
 	@JoinColumn(name = "medication_administration_id")
@@ -79,23 +84,58 @@ public class MedicationAdministration extends BaseFormRecordableOpenmrsData {
 	@JoinColumn(name = "drug_order_id")
 	private DrugOrder drugOrder;
 
+	public enum MedicationAdministrationStatus {
+		INPROGRESS("in-progress"),
+		NOTDONE("not-done"),
+		ONHOLD("on-hold"),
+		COMPLETED("completed"),
+		ENTEREDINERROR("entered-in-error"),
+		STOPPED("stopped"),
+		DECLINED("declined"),
+		UNKNOWN("unknown");
+
+		private final String code;
+
+		MedicationAdministrationStatus(String code) {
+			this.code = code;
+		}
+
+		public String toCode() {
+			return code;
+		}
+
+		public static MedicationAdministrationStatus fromCode(String code) {
+			for (MedicationAdministrationStatus s : values()) {
+				if (s.code.equalsIgnoreCase(code)) {
+					return s;
+				}
+			}
+			return null;
+		}
+	}
+
 	/**
 	 * FHIR:status
-	 * @see <a href="https://www.hl7.org/fhir/valueset-medicationadministration-status.html">
-	 *     		https://www.hl7.org/fhir/valueset-medicationadministration-status.html
-	 *     	</a>
-	 * i.e. in-progress, cancelled, on-hold, completed, entered-in-error, stopped, declined, unknown
+	 * 
+	 * @see <a href=
+	 *      "https://www.hl7.org/fhir/valueset-medicationadministration-status.html">
+	 *      https://www.hl7.org/fhir/valueset-medicationadministration-status.html
+	 *      </a>
+	 *      i.e. in-progress, cancelled, on-hold, completed, entered-in-error,
+	 *      stopped, declined, unknown
 	 */
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
-	private org.hl7.fhir.r4.model.MedicationAdministration.MedicationAdministrationStatus status;
+	private MedicationAdministrationStatus status;
 
 	/**
 	 * FHIR:statusReason.statusReasonCodeableConcept
-	 * @see <a href="https://www.hl7.org/fhir/valueset-medicationadministration-status-reason.html">
-	 *     		https://www.hl7.org/fhir/valueset-medicationadministration-status-reason.html
-	 *     	</a>
-	 * i.e "Stock Out"
+	 * 
+	 * @see <a href=
+	 *      "https://www.hl7.org/fhir/valueset-medicationadministration-status-reason.html">
+	 *      https://www.hl7.org/fhir/valueset-medicationadministration-status-reason.html
+	 *      </a>
+	 *      i.e "Stock Out"
 	 */
 	@ManyToOne(optional = true)
 	@JoinColumn(name = "status_reason")
@@ -110,26 +150,29 @@ public class MedicationAdministration extends BaseFormRecordableOpenmrsData {
 
 	/**
 	 * FHIR:dosage.text
-	 * The dosage instructions should reflect the dosage of the medication that was administered.
+	 * The dosage instructions should reflect the dosage of the medication that was
+	 * administered.
 	 */
-	@Column(name = "dosing_instructions", length=65535)
+	@Column(name = "dosing_instructions", length = 65535)
 	private String dosingInstructions;
 
 	/**
 	 * FHIR:dosage.dose.value
-	 * Numbered Value of the amount of the medication given at one administration event
+	 * Numbered Value of the amount of the medication given at one administration
+	 * event
 	 */
 	@Column(name = "dose")
 	private Double dose;
 
 	/**
 	 * FHIR:dosage.dose.unit
-	 * Units of the amount of the medication given at one administration event. For example, mg, mL, etc.
+	 * Units of the amount of the medication given at one administration event. For
+	 * example, mg, mL, etc.
 	 */
 	@ManyToOne(optional = true)
 	@JoinColumn(name = "dose_units")
 	private Concept doseUnits;
-	
+
 	/**
 	 * FHIR:dosage.route
 	 * Path of substance into body, For example, topical, intravenous, etc.
@@ -148,15 +191,15 @@ public class MedicationAdministration extends BaseFormRecordableOpenmrsData {
 
 	/**
 	 * FHIR:note
+	 * 
 	 * @see <a href="https://hl7.org/fhir/R4/datatypes.html#Annotation">
-	 *     	https://hl7.org/fhir/R4/datatypes.html#Annotation
-	 *     </a>
-	 * Notes or additional information about the medication administration.
+	 *      https://hl7.org/fhir/R4/datatypes.html#Annotation
+	 *      </a>
+	 *      Notes or additional information about the medication administration.
 	 */
 	@OneToMany(cascade = CascadeType.ALL)
 	@JoinColumn(name = "medication_administration_id")
 	private Set<MedicationAdministrationNote> notes;
-
 
 	public MedicationAdministration() {
 	}
@@ -225,11 +268,11 @@ public class MedicationAdministration extends BaseFormRecordableOpenmrsData {
 		this.drugOrder = drugOrder;
 	}
 
-	public org.hl7.fhir.r4.model.MedicationAdministration.MedicationAdministrationStatus getStatus() {
+	public MedicationAdministrationStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(org.hl7.fhir.r4.model.MedicationAdministration.MedicationAdministrationStatus status) {
+	public void setStatus(MedicationAdministrationStatus status) {
 		this.status = status;
 	}
 
@@ -299,12 +342,14 @@ public class MedicationAdministration extends BaseFormRecordableOpenmrsData {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null || getClass() != obj.getClass()) return false;
+		if (this == obj)
+			return true;
+		if (obj == null || getClass() != obj.getClass())
+			return false;
 
 		MedicationAdministration other = (MedicationAdministration) obj;
-		boolean yes= Objects.equals(this.medicationAdministrationId, other.medicationAdministrationId)
-				|| Objects.equals(this.getUuid(),other.getUuid());
+		boolean yes = Objects.equals(this.medicationAdministrationId, other.medicationAdministrationId)
+				|| Objects.equals(this.getUuid(), other.getUuid());
 		return yes;
 	}
 
