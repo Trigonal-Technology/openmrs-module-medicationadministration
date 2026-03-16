@@ -502,12 +502,12 @@ END $$;
     <changeSet id="140820240842BAH4061" author="Bahmni">
         <sql dbms="mysql, mariadb">
             UPDATE medication_administration ma SET ma.status = (CASE
-                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'in-progress' THEN 'INPROGRESS'
-                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'not-done' THEN 'NOTDONE'
-                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'on-hold' THEN 'ONHOLD'
-                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'completed' THEN 'COMPLETED'
-                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'entered-in-error' THEN 'ENTEREDINERROR'
-                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'stopped' THEN 'STOPPED'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) COLLATE utf8mb4_unicode_ci = ma.status COLLATE utf8mb4_unicode_ci LIMIT 1) = 'in-progress' THEN 'INPROGRESS'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) COLLATE utf8mb4_unicode_ci = ma.status COLLATE utf8mb4_unicode_ci LIMIT 1) = 'not-done' THEN 'NOTDONE'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) COLLATE utf8mb4_unicode_ci = ma.status COLLATE utf8mb4_unicode_ci LIMIT 1) = 'on-hold' THEN 'ONHOLD'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) COLLATE utf8mb4_unicode_ci = ma.status COLLATE utf8mb4_unicode_ci LIMIT 1) = 'completed' THEN 'COMPLETED'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) COLLATE utf8mb4_unicode_ci = ma.status COLLATE utf8mb4_unicode_ci LIMIT 1) = 'entered-in-error' THEN 'ENTEREDINERROR'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) COLLATE utf8mb4_unicode_ci = ma.status COLLATE utf8mb4_unicode_ci LIMIT 1) = 'stopped' THEN 'STOPPED'
                 ELSE 'UNKNOWN'
             END);
         </sql>
