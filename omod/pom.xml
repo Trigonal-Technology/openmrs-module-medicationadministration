@@ -57,22 +57,29 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Copy api classes from sibling module (phase=compile so api is built first;
+			     unpack-dependencies fails with mvn test when api jar not yet built) -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
+				<artifactId>maven-resources-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>Expand moduleApplicationContext and messages</id>
+						<id>copy-api-classes</id>
+						<phase>compile</phase>
 						<goals>
-							<goal>unpack-dependencies</goal>
+							<goal>copy-resources</goal>
 						</goals>
-						<phase>generate-resources</phase>
 						<configuration>
-							<includeGroupIds>${project.parent.groupId}</includeGroupIds>
-							<includeArtifactIds>${project.parent.artifactId}-api</includeArtifactIds>
-							<excludeTransitive>true</excludeTransitive>
-							<includes>**/*</includes>
 							<outputDirectory>${project.build.directory}/classes</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/../api/target/classes</directory>
+									<filtering>false</filtering>
+									<includes>
+										<include>**/*</include>
+									</includes>
+								</resource>
+							</resources>
 						</configuration>
 					</execution>
 				</executions>

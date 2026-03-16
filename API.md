@@ -13,10 +13,11 @@ The **medication-administration** module is a **core API module** that provides 
 
 1. [Overview](#overview)
 2. [Comparison with Bahmni Upstream](#comparison-with-bahmni-upstream)
-3. [Java Service API](#java-service-api)
-4. [Domain Model](#domain-model)
-5. [Privileges](#privileges)
-6. [Usage Example](#usage-example)
+3. [FHIR R4 MedicationAdministration](#fhir-r4-medicationadministration-nidan)
+4. [Java Service API](#java-service-api)
+5. [Domain Model](#domain-model)
+6. [Privileges](#privileges)
+7. [Usage Example](#usage-example)
 
 ---
 
@@ -66,18 +67,25 @@ This module is a **fork of [Bahmni/openmrs-module-medicationadministration](http
 - **Collation**: MySQL changeSets use `COLLATE utf8mb4_unicode_ci` where needed for string comparisons.
 - **Reserved keyword**: `function` column renamed to `performer_function` in `medication_administration_performer` (MySQL reserved word).
 
-### Remaining FHIR2 References
+### FHIR R4 MedicationAdministration (Nidan)
 
-- **config.xml**: Still declares `require_module` for `org.openmrs.module.fhir2` (may be required if IPD uses FHIR2; otherwise can be removed for a fully FHIR2-free deployment).
-- **pom.xml**: `fhir2-api` remains as a dependency (Java code has no fhir2 imports; can be removed if fhir2 is not used).
-- **webModuleApplicationContext.xml**: Scans `org.openmrs.module.fhir2.apiext` (legacy; no-op if FHIR2 extension is not present).
+The module now supports **FHIR R4 MedicationAdministration** via the FHIR2 extension layer (`org.openmrs.module.fhir2.apiext`):
+
+- **Resource provider**: `MedicationAdministrationFhirResourceProvider` – `@R4Provider` for FHIR REST
+- **Service**: `FhirMedicationAdministrationService` – `get`, `create`, `update`, `delete`, `searchForMedicationAdministration`
+- **Translator**: `MedicationAdministrationTranslatorImpl` – domain ↔ FHIR R4
+- **Search params**: `patient`, `subject`, `context` (encounter), `medication`, `request`, `performer`, `status`, `effective`, `_id`, `_lastUpdated`
+- **Includes**: `MedicationAdministration:subject`, `:context`, `:medication`, `:request`
+
+API responses align with [FHIR R4 MedicationAdministration](https://www.hl7.org/fhir/medicationadministration.html) (resource type, required elements, search params).
+Requires `fhir2-api` and `fhir2-omod` at runtime.
 
 ### API Differences
 
 | Aspect | Bahmni Upstream | Nidan Fork |
 |--------|-----------------|------------|
-| **Service interface** | `FhirMedicationAdministrationService` extends `FhirService` | `MedicationAdministrationService` extends `OpenmrsService` |
-| **Primary API** | `searchForMedicationAdministration(MedicationAdministrationSearchParams)` → `IBundleProvider` (FHIR bundles) | `getMedicationAdministrationByUuid`, `saveMedicationAdministration`, `voidMedicationAdministration` (domain CRUD) |
+| **Service interface** | `FhirMedicationAdministrationService` extends `FhirService` | Both: `MedicationAdministrationService` (domain CRUD) and `FhirMedicationAdministrationService` (FHIR) |
+| **Primary API** | `searchForMedicationAdministration` → `IBundleProvider` | Same FHIR search; plus `getMedicationAdministrationByUuid`, `saveMedicationAdministration`, `voidMedicationAdministration` (domain) |
 | **Data types** | Works with `org.hl7.fhir.r4.model.MedicationAdministration` via translators | Works directly with `org.openmrs.module.ipd.api.model.MedicationAdministration` |
 | **REST exposure** | FHIR R4 endpoints via FHIR2 module: `/ws/fhir2/R4/MedicationAdministration` (search, read, create, update) | No FHIR endpoints. REST via **IPD module** only: `/ipd/scheduledMedicationAdministrations`, `/ipd/adhocMedicationAdministrations`, etc. |
 | **Search** | `MedicationAdministrationSearchParams` for FHIR search (patient, status, etc.) | No search API in medication-administration module; IPD handles filtering |

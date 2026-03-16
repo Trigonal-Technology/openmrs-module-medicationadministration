@@ -41,41 +41,43 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!--<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${jacocoVersion}</version>
-				<configuration>
-					<includes>
-						<include>**/*</include>
-						<include>**/*</include>
-					</includes>
-					<excludes>
-						<exclude>**/*Activator.class</exclude>
-						<exclude>**/configuration/**</exclude>
-					</excludes>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>${jacocoVersion}</version>
+				<configuration>
+					<skip>${jacoco.skip}</skip>
+					<excludes>
+						<exclude>**/ModuleDescriptor.class</exclude>
+						<exclude>**/PrivilegeConstants.class</exclude>
+						<exclude>**/FhirMedicationAdministrationConstants.class</exclude>
+						<exclude>**/MedicationAdministrationActivator.class</exclude>
+						<exclude>**/model/**</exclude>
+						<exclude>**/db/**</exclude>
+						<exclude>**/dao/impl/**</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
-						<id>check</id>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
 						<goals>
 							<goal>report</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>check</id>
+						<phase>package</phase>
+						<goals>
 							<goal>check</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.build.directory}/jacoco-reports</outputDirectory>
 							<rules>
 								<rule>
 									<element>BUNDLE</element>
@@ -88,7 +90,7 @@
 										<limit>
 											<counter>BRANCH</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.60</minimum>
+											<minimum>0.50</minimum>
 										</limit>
 									</limits>
 								</rule>
@@ -96,7 +98,7 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>-->
+			</plugin>
 		</plugins>
 	</build>
 

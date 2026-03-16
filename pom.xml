@@ -36,6 +36,8 @@
 	</modules>
 
 	<properties>
+		<!-- Set jacoco.skip=false for coverage; true avoids JDK 21+ compatibility issues -->
+		<jacoco.skip>true</jacoco.skip>
 		<openmrsPlatformVersion>2.6.15</openmrsPlatformVersion>
 		<springVersion>5.2.14.RELEASE</springVersion>
 		<junitVersion>4.13</junitVersion>
@@ -285,6 +287,16 @@
 			<url>https://mavenrepo.openmrs.org/public</url>
 		</repository>
 		<repository>
+			<id>openmrs-snapshots</id>
+			<name>OpenMRS Snapshot Repository</name>
+			<url>https://mavenrepo.openmrs.org/snapshots</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<!-- Prefer local .m2 for nidan SNAPSHOTs; avoid remote lookup until Maven account is set up -->
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
 			<id>central</id>
 			<name>Maven Repository Switchboard</name>
 			<layout>default</layout>
@@ -301,10 +313,25 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</pluginRepository>
+		<pluginRepository>
+			<id>openmrs-snapshots</id>
+			<name>OpenMRS Snapshot Repository</name>
+			<url>https://mavenrepo.openmrs.org/snapshots</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</pluginRepository>
 	</pluginRepositories>
 
 
 	<profiles>
+		<profile>
+			<id>coverage</id>
+			<properties>
+				<jacoco.skip>false</jacoco.skip>
+			</properties>
+		</profile>
 		<profile>
 			<id>release-sign-artifacts</id>
 			<activation>
