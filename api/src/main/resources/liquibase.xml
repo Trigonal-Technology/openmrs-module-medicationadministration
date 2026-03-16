@@ -6,16 +6,7 @@
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
 
 
-    <changeSet id="enable-pgcrypto-medadmin" author="Bahmni">
-        <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="0">
-                SELECT COUNT(*) FROM pg_extension WHERE extname = 'pgcrypto';
-            </sqlCheck>
-        </preConditions>
-        <sql dbms="postgresql">
-            CREATE EXTENSION IF NOT EXISTS pgcrypto;
-        </sql>
-    </changeSet>
+    <!-- pgcrypto removed: gen_random_uuid() is built-in in PostgreSQL 13+ -->
 
     <changeSet id="2023-12-05-1854_medication_administration" author="Bahmni">
         <preConditions onFail="MARK_RAN" onFailMessage="Table medication_administration already exists">
@@ -509,19 +500,28 @@ END $$;
     </changeSet>
 
     <changeSet id="140820240842BAH4061" author="Bahmni">
-        <update tableName="medication_administration">
-            <column name="status"
-                    valueComputed="(CASE
-                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'in-progress' THEN 'INPROGRESS'
-                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'not-done' THEN 'NOTDONE'
-                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'on-hold' THEN 'ONHOLD'
-                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'completed' THEN 'COMPLETED'
-                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'entered-in-error' THEN 'ENTEREDINERROR'
-                        WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'stopped' THEN 'STOPPED'
-                        ELSE 'UNKNOWN'
-                    END)">
-            </column>
-        </update>
+        <sql dbms="mysql, mariadb">
+            UPDATE medication_administration ma SET ma.status = (CASE
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'in-progress' THEN 'INPROGRESS'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'not-done' THEN 'NOTDONE'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'on-hold' THEN 'ONHOLD'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'completed' THEN 'COMPLETED'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'entered-in-error' THEN 'ENTEREDINERROR'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS CHAR(11)) = ma.status LIMIT 1) = 'stopped' THEN 'STOPPED'
+                ELSE 'UNKNOWN'
+            END);
+        </sql>
+        <sql dbms="postgresql">
+            UPDATE medication_administration SET status = (CASE
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'in-progress' THEN 'INPROGRESS'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'not-done' THEN 'NOTDONE'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'on-hold' THEN 'ONHOLD'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'completed' THEN 'COMPLETED'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'entered-in-error' THEN 'ENTEREDINERROR'
+                WHEN (SELECT crt.code FROM concept_reference_term crt JOIN concept_reference_map crm ON crt.concept_reference_term_id = crm.concept_reference_term_id WHERE CAST(crm.concept_id AS VARCHAR) = medication_administration.status LIMIT 1) = 'stopped' THEN 'STOPPED'
+                ELSE 'UNKNOWN'
+            END);
+        </sql>
     </changeSet>
 
 </databaseChangeLog>
